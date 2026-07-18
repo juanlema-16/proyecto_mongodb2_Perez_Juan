@@ -124,3 +124,28 @@ crearColeccion("parqueos", {
     }
   }
 });
+
+// ===== ÍNDICES =====
+db.usuarios.createIndex({ cedula: 1 }, { unique: true, name: "ux_usuarios_cedula" });
+db.usuarios.createIndex({ email: 1 }, { unique: true, name: "ux_usuarios_email" });
+db.usuarios.createIndex({ rol: 1, estado: 1 }, { name: "ix_usuarios_rol_estado" });
+db.usuarios.createIndex({ sede_id: 1 }, { name: "ix_usuarios_sede" });
+
+db.vehiculos.createIndex({ placa: 1 }, { unique: true, name: "ux_vehiculos_placa" });
+db.vehiculos.createIndex({ cliente_id: 1 }, { name: "ix_vehiculos_cliente" });
+db.vehiculos.createIndex({ tipo: 1 }, { name: "ix_vehiculos_tipo" });
+
+db.sedes.createIndex({ nombre: 1 }, { unique: true, name: "ux_sedes_nombre" });
+db.sedes.createIndex({ ciudad: 1 }, { name: "ix_sedes_ciudad" });
+
+db.zonas.createIndex({ sede_id: 1, codigo: 1 }, { unique: true, name: "ux_zonas_sede_codigo" });
+db.zonas.createIndex({ sede_id: 1, estado: 1 }, { name: "ix_zonas_sede_estado" });
+
+db.parqueos.createIndex({ vehiculo_id: 1 }, { name: "ix_parqueos_vehiculo" });
+db.parqueos.createIndex({ cliente_id: 1, hora_entrada: -1 }, { name: "ix_parqueos_cliente_fecha" });
+db.parqueos.createIndex({ sede_id: 1, zona_id: 1, estado: 1 }, { name: "ix_parqueos_sede_zona_estado" });
+db.parqueos.createIndex({ sede_id: 1, hora_entrada: -1 }, { name: "ix_parqueos_sede_fecha" });
+db.parqueos.createIndex({ estado: 1 }, { name: "ix_parqueos_estado" });
+db.parqueos.createIndex({ sede_id: 1, tipo_vehiculo: 1 }, { name: "ix_parqueos_sede_tipo" });
+
+print("\n>>> db_config.js ejecutado con éxito.\n");
