@@ -36,6 +36,18 @@ crearORecrearRol("empleado_sede", {
   roles: []
 });
 
+// ===== ROL: cliente_app -> solo lectura (su info se filtra en la app por cliente_id) =====
+crearORecrearRol("cliente_app", {
+  role: "cliente_app",
+  privileges: [
+    { resource: { db: dbName, collection: "sedes" }, actions: ["find"] },
+    { resource: { db: dbName, collection: "zonas" }, actions: ["find"] },
+    { resource: { db: dbName, collection: "parqueos" }, actions: ["find"] },
+    { resource: { db: dbName, collection: "vehiculos" }, actions: ["find"] }
+  ],
+  roles: []
+});
+
 
 
 
