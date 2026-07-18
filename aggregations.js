@@ -20,3 +20,20 @@ const parqueosUltimoMes = db.parqueos.aggregate([
 print("\n1) Parqueos por sede (último mes):");
 printjson(parqueosUltimoMes);
 
+// ============================================================
+// CONSULTA 2: Zona más ocupada de cada sede
+// ============================================================
+const zonasMasOcupadas = db.parqueos.aggregate([
+  { $group: { _id: { sede_id: "$sede_id", zona_id: "$zona_id" }, total_parqueos: { $sum: 1 } } },
+  { $sort: { total_parqueos: -1 } },
+  { $group: { _id: "$_id.sede_id", zona_top_id: { $first: "$_id.zona_id" }, total_parqueos: { $first: "$total_parqueos" } } },
+  { $lookup: { from: "sedes", localField: "_id", foreignField: "_id", as: "sede" } },
+  { $lookup: { from: "zonas", localField: "zona_top_id", foreignField: "_id", as: "zona" } },
+  { $unwind: "$sede" },
+  { $unwind: "$zona" },
+  { $project: { _id: 0, sede: "$sede.nombre", zona_mas_ocupada: "$zona.codigo", total_parqueos: 1 } },
+  { $sort: { sede: 1 } }
+]).toArray();
+print("\n2) Zona más ocupada por sede:");
+printjson(zonasMasOcupadas);
+
