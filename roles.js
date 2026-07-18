@@ -23,4 +23,19 @@ crearORecrearRol("administrador", {
   roles: [{ role: "dbAdmin", db: dbName }]
 });
 
+// ===== ROL: empleado_sede -> lectura de clientes/vehículos, escribe parqueos y zonas (cupos) =====
+crearORecrearRol("empleado_sede", {
+  role: "empleado_sede",
+  privileges: [
+    { resource: { db: dbName, collection: "usuarios" }, actions: ["find"] },
+    { resource: { db: dbName, collection: "vehiculos" }, actions: ["find"] },
+    { resource: { db: dbName, collection: "sedes" }, actions: ["find"] },
+    { resource: { db: dbName, collection: "zonas" }, actions: ["find", "update"] },
+    { resource: { db: dbName, collection: "parqueos" }, actions: ["find", "insert", "update"] }
+  ],
+  roles: []
+});
+
+
+
 
