@@ -57,3 +57,44 @@ function registrarIngresoConTransaccion(vehiculoId, zonaId, horaEntrada) {
   return parqueoCreado;
 }
 
+// ============================================================
+// Registrar SALIDA: cierra el parqueo (calcula tiempo/costo) + libera cupo
+// ============================================================
+function registrarSalidaConTransaccion(parqueoId, horaSalida) {
+  const session = db.getMongo().startSession();
+  const sesionDb = session.getDatabase(dbName);
+
+  try {
+    session.startTransaction({ readConcern: { level: "snapshot" }, writeConcern: { w: "majority" } });
+
+    const parqueo = sesionDb.parqueos.findOne({ _id: parqueoId });
+    if (!parqueo) throw new Error(`El parqueo ${parqueoId} no existe.`);
+    if (parqueo.estado !== "activo") throw new Error(`El parqueo ${parqueoId} ya fue finalizado.`);
+
+    const zona = sesionDb.zonas.findOne({ _id: parqueo.zona_id });
+    if (!zona) throw new Error(`La zona ${parqueo.zona_id} no existe.`);
+
+    const minutos = Math.max(Math.round((horaSalida - parqueo.hora_entrada) / 60000), 1);
+    const costo = Math.round((minutos / 60) * zona.tarifa_hora * 100) / 100;
+
+    // PASO A: cerrar el parqueo
+    sesionDb.parqueos.updateOne(
+      { _id: parqueoId },
+      { $set: { hora_salida: horaSalida, tiempo_total_minutos: minutos, costo_total: costo, estado: "finalizado" } },
+    );
+
+    // PASO B: liberar el cupo (nunca supera capacidad_maxima)
+    sesionDb.zonas.updateOne(
+      { _id: zona._id, cupos_disponibles: { $lt: zona.capacidad_maxima } },
+      { $inc: { cupos_disponibles: 1 } },
+    );
+
+    session.commitTransaction();
+    print(`✔ Commit: parqueo ${parqueoId} finalizado (${minutos} min, Q${costo}).`);
+  } catch (error) {
+    print(`✘ Error: ${error.message} -> abortTransaction() (rollback)`);
+    session.abortTransaction();
+  } finally {
+    session.endSession();
+  }
+}
