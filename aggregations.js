@@ -65,3 +65,17 @@ const clienteFrecuente = db.parqueos.aggregate([
 print("\n4) Cliente más frecuente:");
 printjson(clienteFrecuente);
 
+// ============================================================
+// CONSULTA 5: Tipo de vehículo más frecuente por sede
+// ============================================================
+const tipoMasFrecuente = db.parqueos.aggregate([
+  { $group: { _id: { sede_id: "$sede_id", tipo_vehiculo: "$tipo_vehiculo" }, total: { $sum: 1 } } },
+  { $sort: { total: -1 } },
+  { $group: { _id: "$_id.sede_id", tipo_mas_frecuente: { $first: "$_id.tipo_vehiculo" }, total: { $first: "$total" } } },
+  { $lookup: { from: "sedes", localField: "_id", foreignField: "_id", as: "sede" } },
+  { $unwind: "$sede" },
+  { $project: { _id: 0, sede: "$sede.nombre", tipo_vehiculo_mas_frecuente: "$tipo_mas_frecuente", total_registros: "$total" } },
+  { $sort: { sede: 1 } }
+]).toArray();
+print("\n5) Tipo de vehículo más frecuente por sede:");
+printjson(tipoMasFrecuente);
