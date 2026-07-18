@@ -50,3 +50,18 @@ const ingresoPorSede = db.parqueos.aggregate([
 ]).toArray();
 print("\n3) Ingreso total por sede:");
 printjson(ingresoPorSede);
+
+// ============================================================
+// CONSULTA 4: Cliente que más ha usado el parqueadero
+// ============================================================
+const clienteFrecuente = db.parqueos.aggregate([
+  { $group: { _id: "$cliente_id", veces_usado: { $sum: 1 } } },
+  { $sort: { veces_usado: -1 } },
+  { $limit: 1 },
+  { $lookup: { from: "usuarios", localField: "_id", foreignField: "_id", as: "cliente" } },
+  { $unwind: "$cliente" },
+  { $project: { _id: 0, cliente: "$cliente.nombre", cedula: "$cliente.cedula", veces_usado: 1 } }
+]).toArray();
+print("\n4) Cliente más frecuente:");
+printjson(clienteFrecuente);
+
