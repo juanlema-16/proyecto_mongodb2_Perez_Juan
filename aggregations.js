@@ -112,3 +112,23 @@ const vehiculosActualesPorSede = db.parqueos.aggregate([
 ]).toArray();
 print("\n7) Vehículos parqueados actualmente por sede:");
 printjson(vehiculosActualesPorSede);
+
+// ============================================================
+// CONSULTA 8: Zonas que han excedido su capacidad en algún día
+// (aproximación: ingresos por zona+día vs. capacidad_maxima)
+// ============================================================
+const zonasExcedidas = db.parqueos.aggregate([
+  { $group: { _id: { zona_id: "$zona_id", dia: { $dateTrunc: { date: "$hora_entrada", unit: "day" } } }, ingresos_del_dia: { $sum: 1 } } },
+  { $lookup: { from: "zonas", localField: "_id.zona_id", foreignField: "_id", as: "zona" } },
+  { $unwind: "$zona" },
+  { $match: { $expr: { $gt: ["$ingresos_del_dia", "$zona.capacidad_maxima"] } } },
+  { $lookup: { from: "sedes", localField: "zona.sede_id", foreignField: "_id", as: "sede" } },
+  { $unwind: "$sede" },
+  { $project: { _id: 0, sede: "$sede.nombre", zona: "$zona.codigo", dia: "$_id.dia", ingresos_del_dia: 1, capacidad_maxima: "$zona.capacidad_maxima" } },
+  { $sort: { ingresos_del_dia: -1 } }
+]).toArray();
+print("\n8) Zonas que excedieron su capacidad en algún día:");
+printjson(zonasExcedidas.length ? zonasExcedidas : "Ninguna zona excedió su capacidad con el dataset actual.");
+
+print("\n>>> aggregations.js ejecutado con éxito.\n");
+
