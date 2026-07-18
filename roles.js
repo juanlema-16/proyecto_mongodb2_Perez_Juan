@@ -48,6 +48,21 @@ crearORecrearRol("cliente_app", {
   roles: []
 });
 
+// ===== USUARIOS DE MONGODB DE EJEMPLO =====
+function crearORecrearUsuarioMongo(user, pwd, roles) {
+  try { db.dropUser(user); } catch (e) {}
+  db.createUser({ user: user, pwd: pwd, roles: roles });
+  print(`✔ Usuario "${user}" creado con roles: ${JSON.stringify(roles)}`);
+}
+
+crearORecrearUsuarioMongo("admin_mariana", "CambiarPassword123!", [{ role: "administrador", db: dbName }]);
+crearORecrearUsuarioMongo("empleado_ana_guatemala", "CambiarPassword123!", [{ role: "empleado_sede", db: dbName }]);
+crearORecrearUsuarioMongo("cliente_andrea", "CambiarPassword123!", [{ role: "cliente_app", db: dbName }]);
+
+// Ejemplo de asignar un rol a un usuario ya existente:
+// db.grantRolesToUser("empleado_ana_guatemala", [{ role: "empleado_sede", db: dbName }]);
+
+print("\n>>> roles.js ejecutado con éxito.\n");
 
 
 
