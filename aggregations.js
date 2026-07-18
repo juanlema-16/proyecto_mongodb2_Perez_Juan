@@ -79,3 +79,21 @@ const tipoMasFrecuente = db.parqueos.aggregate([
 ]).toArray();
 print("\n5) Tipo de vehículo más frecuente por sede:");
 printjson(tipoMasFrecuente);
+
+// ============================================================
+// CONSULTA 6: Historial de parqueos de un cliente específico
+// ============================================================
+const cedulaEjemplo = "3000000001"; // cambia esta cédula para consultar otro cliente
+const clienteBuscado = db.usuarios.findOne({ cedula: cedulaEjemplo, rol: "cliente" });
+
+const historialCliente = db.parqueos.aggregate([
+  { $match: { cliente_id: clienteBuscado._id } },
+  { $lookup: { from: "sedes", localField: "sede_id", foreignField: "_id", as: "sede" } },
+  { $lookup: { from: "zonas", localField: "zona_id", foreignField: "_id", as: "zona" } },
+  { $unwind: "$sede" },
+  { $unwind: "$zona" },
+  { $sort: { hora_entrada: -1 } },
+  { $project: { _id: 0, fecha_entrada: "$hora_entrada", fecha_salida: "$hora_salida", sede: "$sede.nombre", zona: "$zona.codigo", tipo_vehiculo: 1, tiempo_total_minutos: 1, costo_total: 1, estado: 1 } }
+]).toArray();
+print(`\n6) Historial de parqueos de: ${clienteBuscado.nombre}:`);
+printjson(historialCliente);
