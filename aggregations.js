@@ -97,3 +97,18 @@ const historialCliente = db.parqueos.aggregate([
 ]).toArray();
 print(`\n6) Historial de parqueos de: ${clienteBuscado.nombre}:`);
 printjson(historialCliente);
+
+// ============================================================
+// CONSULTA 7: Vehículos parqueados actualmente en cada sede
+// ============================================================
+const vehiculosActualesPorSede = db.parqueos.aggregate([
+  { $match: { estado: "activo" } },
+  { $lookup: { from: "vehiculos", localField: "vehiculo_id", foreignField: "_id", as: "vehiculo" } },
+  { $lookup: { from: "sedes", localField: "sede_id", foreignField: "_id", as: "sede" } },
+  { $unwind: "$vehiculo" },
+  { $unwind: "$sede" },
+  { $group: { _id: "$sede.nombre", vehiculos_actuales: { $push: { placa: "$vehiculo.placa", tipo: "$vehiculo.tipo", hora_entrada: "$hora_entrada" } }, total_activos: { $sum: 1 } } },
+  { $sort: { _id: 1 } }
+]).toArray();
+print("\n7) Vehículos parqueados actualmente por sede:");
+printjson(vehiculosActualesPorSede);
