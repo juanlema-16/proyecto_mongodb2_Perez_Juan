@@ -98,3 +98,39 @@ function registrarSalidaConTransaccion(parqueoId, horaSalida) {
     session.endSession();
   }
 }
+
+// ============================================================
+// DEMOSTRACIÓN: ingreso + salida exitosos
+// ============================================================
+const vehiculoDemo = db.vehiculos.findOne({ tipo: "carro" });
+const zonaConCupo = db.zonas.findOne({ tipo_vehiculo_permitido: "carro", cupos_disponibles: { $gt: 0 } });
+
+if (vehiculoDemo && zonaConCupo) {
+  print(`\nVehículo: ${vehiculoDemo.placa} | Zona: ${zonaConCupo.codigo} (cupos antes: ${zonaConCupo.cupos_disponibles})`);
+  const parqueo = registrarIngresoConTransaccion(vehiculoDemo._id, zonaConCupo._id, new Date());
+
+  if (parqueo) {
+    print(`Cupos después del ingreso: ${db.zonas.findOne({ _id: zonaConCupo._id }).cupos_disponibles}`);
+    const horaSalidaSimulada = new Date(parqueo.hora_entrada.getTime() + 90 * 60 * 1000);
+    registrarSalidaConTransaccion(parqueo._id, horaSalidaSimulada);
+    print(`Cupos después de la salida: ${db.zonas.findOne({ _id: zonaConCupo._id }).cupos_disponibles}`);
+  }
+} else {
+  print("Ejecuta primero db_config.js y test_dataset.js.");
+}
+
+// ============================================================
+// DEMOSTRACIÓN: ROLLBACK al intentar ingresar a una zona sin cupo
+// ============================================================
+const zonaLlena = db.zonas.findOne({ cupos_disponibles: 0 });
+if (zonaLlena) {
+  const vehiculoParaZonaLlena = db.vehiculos.findOne({ tipo: zonaLlena.tipo_vehiculo_permitido[0] });
+  if (vehiculoParaZonaLlena) {
+    print(`\nIntentando ingresar a la zona llena '${zonaLlena.codigo}'...`);
+    registrarIngresoConTransaccion(vehiculoParaZonaLlena._id, zonaLlena._id, new Date());
+  }
+} else {
+  print("\nNo hay zonas en 0 cupos en el dataset actual para demostrar el rollback.");
+}
+
+print("\n>>> transactions.js ejecutado con éxito.\n");
