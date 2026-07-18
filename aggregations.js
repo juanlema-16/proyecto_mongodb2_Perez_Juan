@@ -37,3 +37,16 @@ const zonasMasOcupadas = db.parqueos.aggregate([
 print("\n2) Zona más ocupada por sede:");
 printjson(zonasMasOcupadas);
 
+// ============================================================
+// CONSULTA 3: Ingreso total generado por sede
+// ============================================================
+const ingresoPorSede = db.parqueos.aggregate([
+  { $match: { estado: "finalizado", costo_total: { $ne: null } } },
+  { $group: { _id: "$sede_id", ingreso_total: { $sum: "$costo_total" }, cantidad_parqueos_facturados: { $sum: 1 } } },
+  { $lookup: { from: "sedes", localField: "_id", foreignField: "_id", as: "sede" } },
+  { $unwind: "$sede" },
+  { $project: { _id: 0, sede: "$sede.nombre", ingreso_total: { $round: ["$ingreso_total", 2] }, cantidad_parqueos_facturados: 1 } },
+  { $sort: { ingreso_total: -1 } }
+]).toArray();
+print("\n3) Ingreso total por sede:");
+printjson(ingresoPorSede);
